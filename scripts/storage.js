@@ -7,6 +7,11 @@ class DataStore {
         });
     }
 
+    updateUsageData(data) {
+        console.log("Updating usage data")
+        chrome.storage.local.set({ 'usageData': data });
+    }
+
     getMemoryUse(name, callback) {
         chrome.storage.local.getBytesInUse(name, callback);
     };
