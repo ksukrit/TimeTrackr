@@ -4,7 +4,7 @@
   <style>
     body {
       width: 200px;
-      height: 150px;
+      height: 200px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -13,19 +13,30 @@
 
     button {
       margin-bottom: 10px;
+      width: 150px;
     }
-    
+  
+    h3 {
+      margin: 0;
+    }
+
+    #limit{
+      margin-bottom: 10px;
+    }
   
   </style>
   <script src="scripts/process.js"></script>
   <script src="scripts/storage.js"></script>
+  <script src="scripts/utility.js"></script>
   
 </head>
 <body>
-
+  <h3 id="website">{placeholder_url}</h3>
+  <h3 id="usage">{placeholder_usage}</h3>
+  <h3 id="limit">Limit: No Limit</h3>
   <button id="viewTimeButton">View Time Spent</button>
   <button id="resetButton">Reset Data</button>
-  <button id="csvButton">Get CSV Data</button>
+  <button id="csvButton">Get 30 day CSV Data</button>
   <button id="addLimit">Add Time Limit</button>
 
   <script src="popup.js"></script>

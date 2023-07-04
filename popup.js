@@ -1,13 +1,15 @@
 var processor = new Processor();
 var dataStore = new DataStore();
-// write convertToCSV function
+
 function convertToCSV(data) {
-  const cutoffTime = processor.getCutoffTime(24*30);
+  const cutoffTime = processor.getCutoffTime(24 * 30);
   const processedData = processor.processData(data, cutoffTime);
+  const sortedData = Object.entries(processedData).sort((a, b) => b[1] - a[1]);
+
   const csv = [];
-  csv.push(['Hostname', 'Time Spent (minutes)']);
-  for (const [hostname, timeSpent] of Object.entries(processedData)) {
-    csv.push([hostname, timeSpent]);
+  csv.push(['Website url', 'Time Spent (minutes)']);
+  for (const [idx, data] of Object.entries(sortedData)) {
+    csv.push([data[0], data[1]]);
   }
   return csv.join('\n');
 }
@@ -18,6 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const resetButton = document.getElementById('resetButton');
   const csvButton = document.getElementById('csvButton');
   const limitButton = document.getElementById('addLimit');
+  const usageText = document.getElementById('usage');
+  const urlText = document.getElementById('website');
+  const limitText = document.getElementById('limit');
+
 
   resetButton.addEventListener('click', function () {
     dataStore.clearStorage();
@@ -29,12 +35,11 @@ document.addEventListener('DOMContentLoaded', function () {
       const usageData = result.usageData;
       const csv = convertToCSV(usageData);
       const blob = new Blob([csv], { type: 'text/csv' });
-      alert("We are working on this feature")
       const url = URL.createObjectURL(blob);
-      // chrome.downloads.download({
-      //   url: url,
-      //   filename: 'usageData.csv'
-      // });
+      chrome.downloads.download({
+        url: url,
+        filename: 'usageData.csv'
+      });
     });
   });
 
@@ -43,33 +48,36 @@ document.addEventListener('DOMContentLoaded', function () {
     chrome.tabs.create({ url: 'graph.html' });
   });
 
-  // check if current tab is already limited if yes flip the button to remove limit
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    const url = new URL(tabs[0].url);
-    const hostname = url.hostname;
+  getActiveTab(function (hostname, tabs) {
     dataStore.getLimitData(function (result) {
       console.log("Checking if current tab is limited")
       console.log(hostname)
       console.log(result)
+
+      urlText.innerHTML = hostname;
+      getHostnameCurrentUsage(hostname, processor, dataStore, function (currentUsage) {
+        usageText.innerHTML = "Current usage: " + Math.round(currentUsage) + " minutes";
+      });
       var limitData = result.limitData;
       if (limitData[hostname] !== undefined) {
+        limitText.innerHTML = "Limit: " + limitData[hostname] + " minutes";
         limitButton.innerHTML = "Remove Limit";
       }
     });
   });
 
-
   limitButton.addEventListener('click', function () {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      const url = new URL(tabs[0].url);
-      const hostname = url.hostname;
+    getActiveTab(function (hostname, tabs) {
+      // scope of optimization here as we are getting limit data twice
       dataStore.getLimitData(function (result) {
         let ld = result.limitData;
         if (ld[hostname] !== undefined) {
           delete ld[hostname];
+          limitText.innerHTML = "Limit: No Limit";
           limitButton.innerHTML = "Add Time Limit";
         } else {
           ld[hostname] = 30;
+          limitText.innerHTML = "Limit: " + ld[hostname] + " minutes";
           limitButton.innerHTML = "Remove Limit";
         }
         dataStore.updateLimitData(ld);
