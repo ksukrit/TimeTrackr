@@ -2,15 +2,9 @@ let activeTabHostname;
 let usageData = {};
 let tabStartTime = {};
 // move to using imports in the future
-importScripts("scripts/storage.js", "scripts/process.js");
+importScripts("scripts/storage.js", "scripts/process.js", "scripts/utility.js");
 var dataStore = new DataStore();
 var processor = new Processor();
-
-function getCurrentTime() {
-    dt = Date.now();
-    const currentTime = Math.round(dt / 60000) * 60000;
-    return currentTime;
-}
 
 function startTrackingTab(hostname) {
     enforceLimit(hostname);
@@ -45,15 +39,12 @@ function enforceLimit(hostname) {
                 const timeSpent = processedData[hostname];
                 console.log("Time limit is " + timeLimitData[hostname] + " and time spent is " + timeSpent)
                 if (timeSpent > timeLimitData[hostname]) {
-                    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                        if (tabs[0] === undefined) {
-                            console.debug("No active tab")
+                    getActiveTab(function (currentTabHostname,tabs) {
+                        if (currentTabHostname === undefined) {
                             return;
                         }
-                        const url = new URL(tabs[0].url);
-                        const c_url = url.hostname;
-                        if (c_url === hostname) {
-                            // Make custom page in the future
+
+                        if (currentTabHostname === hostname) {
                             chrome.tabs.update(tabs[0].id, { url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
                         }
                     });
@@ -97,14 +88,6 @@ function saveUsageData() {
     });
 }
 
-
-function getHostname(url) {
-    if (url === undefined) {
-        return "";
-    }
-    const urlObj = new URL(url);
-    return urlObj.hostname;
-}
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (tab.url.startsWith("chrome://")) {
