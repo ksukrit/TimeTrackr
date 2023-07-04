@@ -25,6 +25,9 @@ const getHostname = (url) => {
         return "";
     }
     const urlObj = new URL(url);
+    if (urlObj.hostname === "laagjcbeephlhghblacnfjilfhfajlnp"){
+        return "TimeTrackr-Extension";
+    }
     return urlObj.hostname;
 }
 
