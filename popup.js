@@ -1,4 +1,5 @@
 var processor = new Processor();
+var dataStore = new DataStore();
 // write convertToCSV function
 function convertToCSV(data) {
   const cutoffTime = processor.getCutoffTime(24*30);
@@ -15,14 +16,15 @@ function convertToCSV(data) {
 document.addEventListener('DOMContentLoaded', function () {
   const viewTimeButton = document.getElementById('viewTimeButton');
   const resetButton = document.getElementById('resetButton');
+  const csvButton = document.getElementById('csvButton');
+
   resetButton.addEventListener('click', function () {
-    chrome.storage.local.clear();
-    chrome.runtime.reload();
+    dataStore.clearStorage();
   });
 
-  const csvButton = document.getElementById('csvButton');
   csvButton.addEventListener('click', function () {
-    chrome.storage.local.get('usageData', function (result) {
+    dataStore.getMemoryUse('usageData', function (result) { console.log(result) });
+    dataStore.getUsageData(function (result) {
       const usageData = result.usageData;
       const csv = convertToCSV(usageData);
       const blob = new Blob([csv], { type: 'text/csv' });

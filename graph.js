@@ -3,17 +3,10 @@ let processedData24Hr;
 let processedData7Days;
 let chart;
 var processor = new Processor();
-
-function getUsageData(callback) {
-  chrome.storage.local.get('usageData', function (result) {
-    if (result !== undefined) {
-      callback(result)
-    }
-  });
-}
+var dataStore = new DataStore();
 
 document.addEventListener('DOMContentLoaded', function () {
-  getUsageData(function (result) {
+  dataStore.getUsageData(function (result) {
     const usageData = result.usageData;
     const cutoffTime1Hr = processor.getCutoffTime(1);
     const cutoffTime24Hr = processor.getCutoffTime(24);
@@ -23,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     processedData24Hr = processor.processData(usageData, cutoffTime24Hr);
     processedData7Days = processor.processData(usageData, cutoffTime7Days);
 
-    const ctx = document.getElementById('myChart').getContext('2d');
+    const ctx = document.getElementById('chart').getContext('2d');
     updateTotalTime(processedData1Hr);
     document.getElementById('1hour').style.backgroundColor = "#4CAF50";
     document.getElementById('24hour').style.backgroundColor = "#008CBA";
@@ -65,35 +58,36 @@ function updateTotalTime(processedData) {
   document.getElementById('totalTime').innerHTML = "Total time spent browsing : " + Math.round(total) + " minutes";
 }
 
-document.getElementById('1hour').addEventListener('click', function () {
-  chart.data.labels = Object.keys(processedData1Hr);
-  chart.data.datasets[0].data = Object.values(processedData1Hr);
+function updateChart(processedData) {
+  chart.data.labels = Object.keys(processedData);
+  chart.data.datasets[0].data = Object.values(processedData);
   chart.update();
-  updateTotalTime(processedData1Hr);
+}
 
-  document.getElementById('1hour').style.backgroundColor = "#4CAF50";
+function setActiveButton(buttonId) {
+  document.getElementById('1hour').style.backgroundColor = "#008CBA";
   document.getElementById('24hour').style.backgroundColor = "#008CBA";
   document.getElementById('7day').style.backgroundColor = "#008CBA";
+  document.getElementById(buttonId).style.backgroundColor = "#4CAF50";
+}
+
+document.getElementById('1hour').addEventListener('click', function () {
+  updateChart(processedData1Hr);
+  updateTotalTime(processedData1Hr);
+
+  setActiveButton('1hour');
 });
 
 document.getElementById('24hour').addEventListener('click', function () {
-  chart.data.labels = Object.keys(processedData24Hr);
-  chart.data.datasets[0].data = Object.values(processedData24Hr);
-  chart.update();
+  updateChart(processedData24Hr);
   updateTotalTime(processedData24Hr);
 
-  document.getElementById('24hour').style.backgroundColor = "#4CAF50";
-  document.getElementById('1hour').style.backgroundColor = "#008CBA";
-  document.getElementById('7day').style.backgroundColor = "#008CBA";
+  setActiveButton('24hour');
 });
 
 document.getElementById('7day').addEventListener('click', function () {
-  chart.data.labels = Object.keys(processedData7Days);
-  chart.data.datasets[0].data = Object.values(processedData7Days);
-  chart.update();
+  updateChart(processedData7Days);
   updateTotalTime(processedData7Days);
 
-  document.getElementById('7day').style.backgroundColor = "#4CAF50";
-  document.getElementById('1hour').style.backgroundColor = "#008CBA";
-  document.getElementById('24hour').style.backgroundColor = "#008CBA";
+  setActiveButton('7day');
 });
