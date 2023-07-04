@@ -125,12 +125,13 @@ chrome.tabs.onActivated.addListener(function (activeInfo) {
 });
 
 function handleAbruptShutdown() {
-    stopTrackingTab(activeTabHostname);
+    // stopTrackingTab(activeTabHostname);
+    console.log("Shutting down background script");
     saveUsageData();
 }
 
 function cleanupData() {
-    const cutoffTime = getCurrentTime() - (1000 * 60 * 60 * 24 * 30);
+    const cutoffTime = processor.getCutoffTime(24 * 30);
     dataStore.getUsageData(function (result) {
         let usageDataGlobal = result.usageData || {};
         for (const [ts, val] of Object.entries(usageDataGlobal)) {

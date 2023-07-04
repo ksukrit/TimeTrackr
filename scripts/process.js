@@ -4,6 +4,9 @@ class Processor {
         for (const [ts, val] of Object.entries(data)) {
             if (ts > cutoffTime) {
                 for (const [hostname, timeSpent] of Object.entries(val)) {
+                    if (hostname === "laagjcbeephlhghblacnfjilfhfajlnp") {
+                        hostname = "TimeTrackr-Extension";
+                    }
                     processedData[hostname] = processedData[hostname] || 0;
                     processedData[hostname] += timeSpent;
                 }
