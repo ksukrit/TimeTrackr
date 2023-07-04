@@ -2,8 +2,9 @@ let activeTabHostname;
 let usageData = {};
 let tabStartTime = {};
 // move to using imports in the future
-importScripts("scripts/storage.js");
+importScripts("scripts/storage.js", "scripts/process.js");
 var dataStore = new DataStore();
+var processor = new Processor();
 
 function getCurrentTime() {
     dt = Date.now();
@@ -12,6 +13,7 @@ function getCurrentTime() {
 }
 
 function startTrackingTab(hostname) {
+    enforceLimit(hostname);
     activeTabHostname = hostname;
     tabStartTime[hostname] = Date.now();
     usageData[hostname] = usageData[hostname] || 0;
@@ -30,6 +32,35 @@ function stopTrackingTab(hostname) {
         }
         activeTabHostname = undefined;
     }
+}
+
+function enforceLimit(hostname) {
+    dataStore.getLimitData(function (result) {
+        let timeLimitData = result.limitData;
+        if (timeLimitData[hostname] !== undefined) {
+            const cutoffTime = processor.getCutoffTime(24 * 30);
+            dataStore.getUsageData(function (result) {
+                let usageDataGlobal = result.usageData || {};
+                const processedData = processor.processData(usageDataGlobal, cutoffTime);
+                const timeSpent = processedData[hostname];
+                console.log("Time limit is " + timeLimitData[hostname] + " and time spent is " + timeSpent)
+                if (timeSpent > timeLimitData[hostname]) {
+                    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                        if (tabs[0] === undefined) {
+                            console.debug("No active tab")
+                            return;
+                        }
+                        const url = new URL(tabs[0].url);
+                        const c_url = url.hostname;
+                        if (c_url === hostname) {
+                            // Make custom page in the future
+                            chrome.tabs.update(tabs[0].id, { url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
+                        }
+                    });
+                }
+            });
+        }
+    });
 }
 
 function saveUsageData() {
@@ -55,7 +86,7 @@ function saveUsageData() {
 
         dataStore.getMemoryUse('usageData', function (bytesInUse) {
             console.log("Memory usage: " + bytesInUse);
-            if (bytesInUse > 3*1024*1024) {
+            if (bytesInUse > 3 * 1024 * 1024) {
                 cleanupData();
             }
         });
