@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "TimeTracker",
+    "description": "Allows you to track time spent on websites",
+    "version": "0.1",
+    "permissions": [
+        "tabs",
+        "storage"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    }
+}
