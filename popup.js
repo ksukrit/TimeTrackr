@@ -56,9 +56,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
       urlText.innerHTML = hostname;
       getHostnameCurrentUsage(hostname, processor, dataStore, function (currentUsage) {
+        if (currentUsage === undefined || isNaN(currentUsage) || isNaN(Math.round(currentUsage))) {
+          currentUsage = 0;
+        }
         usageText.innerHTML = "Current usage: " + Math.round(currentUsage) + " minutes";
       });
-      var limitData = result.limitData;
+      var limitData = result.limitData || {};
       if (limitData[hostname] !== undefined) {
         limitText.innerHTML = "Limit: " + limitData[hostname] + " minutes";
         limitButton.innerHTML = "Remove Limit";
@@ -70,8 +73,8 @@ document.addEventListener('DOMContentLoaded', function () {
     getActiveTab(function (hostname, tabs) {
       // scope of optimization here as we are getting limit data twice
       dataStore.getLimitData(function (result) {
-        let ld = result.limitData;
-        if (ld[hostname] !== undefined) {
+        let ld = result.limitData || {};
+        if (ld !== undefined && ld[hostname] !== undefined) {
           delete ld[hostname];
           limitText.innerHTML = "Limit: No Limit";
           limitButton.innerHTML = "Add Time Limit";

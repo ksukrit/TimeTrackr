@@ -30,7 +30,7 @@ function stopTrackingTab(hostname) {
 
 function enforceLimit(hostname) {
     dataStore.getLimitData(function (result) {
-        let timeLimitData = result.limitData;
+        let timeLimitData = result.limitData || {} ;
         if (timeLimitData[hostname] !== undefined) {
             const cutoffTime = processor.getCutoffTime(24 * 30);
             dataStore.getUsageData(function (result) {
