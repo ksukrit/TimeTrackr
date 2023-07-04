@@ -3,7 +3,7 @@ class Processor {
         var processedData = {};
         for (const [ts, val] of Object.entries(data)) {
             if (ts > cutoffTime) {
-                for (const [hostname, timeSpent] of Object.entries(val)) {
+                for (let [hostname, timeSpent] of Object.entries(val)) {
                     if (hostname === "laagjcbeephlhghblacnfjilfhfajlnp") {
                         hostname = "TimeTrackr-Extension";
                     }
