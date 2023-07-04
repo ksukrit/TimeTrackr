@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "TimeTracker",
     "description": "Allows you to track time spent on websites",
-    "version": "0.1",
+    "version": "0.1.2",
     "permissions": [
         "tabs",
         "storage"
