@@ -1,6 +1,9 @@
 let activeTabHostname;
 let usageData = {};
 let tabStartTime = {};
+// move to using imports in the future
+importScripts("scripts/storage.js");
+var dataStore = new DataStore();
 
 function getCurrentTime() {
     dt = Date.now();
@@ -21,7 +24,6 @@ function stopTrackingTab(hostname) {
         console.log(`Used ${hostname} for ${durationInSeconds}s`);
         usageData[hostname] = usageData[hostname] || 0;
         usageData[hostname] += duration;
-        console.log(usageData);
 
         if (durationInSeconds > 60) {
             saveUsageData();
@@ -30,18 +32,9 @@ function stopTrackingTab(hostname) {
     }
 }
 
-function getUsageData(callback) {
-    chrome.storage.local.get('usageData', function (result) {
-        if (result !== undefined) {
-            callback(result)
-        }
-    });
-}
-
 function saveUsageData() {
-    console.log("Going to save usage data")
     let ts = getCurrentTime();
-    getUsageData(function (result) {
+    dataStore.getUsageData(function (result) {
         let usageDataGlobal = result.usageData || {};
         console.log(usageDataGlobal);
         let prevHostname = "";
@@ -57,8 +50,15 @@ function saveUsageData() {
             return;
         }
         usageDataGlobal[ts] = usageData;
-        chrome.storage.local.set({ 'usageData': usageDataGlobal });
+        dataStore.updateUsageData(usageDataGlobal);
         usageData = {};
+
+        dataStore.getMemoryUse('usageData', function (bytesInUse) {
+            console.log("Memory usage: " + bytesInUse);
+            if (bytesInUse > 3*1024*1024) {
+                cleanupData();
+            }
+        });
 
         if (prevHostname !== "") {
             startTrackingTab(prevHostname);
@@ -102,7 +102,6 @@ chrome.tabs.onActivated.addListener(function (activeInfo) {
         if ((tab && tab.url.startsWith("chrome://")) || !tab || tab.url === undefined || tab.url === "") {
             return;
         }
-        console.log(activeInfo, tab)
         const hostname = getHostname(tab.url);
         if (activeTabHostname !== hostname) {
             stopTrackingTab(activeTabHostname);
@@ -118,14 +117,14 @@ function handleAbruptShutdown() {
 
 function cleanupData() {
     const cutoffTime = getCurrentTime() - (1000 * 60 * 60 * 24 * 30);
-    getUsageData(function (result) {
+    dataStore.getUsageData(function (result) {
         let usageDataGlobal = result.usageData || {};
         for (const [ts, val] of Object.entries(usageDataGlobal)) {
             if (ts < cutoffTime) {
                 delete usageDataGlobal[ts];
             }
         }
-        chrome.storage.local.set({ 'usageData': usageDataGlobal });
+        dataStore.updateUsageData(usageDataGlobal);
     });
 }
 
