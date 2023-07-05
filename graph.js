@@ -61,6 +61,7 @@ function updateTotalTime(processedData) {
 function updateChart(processedData) {
   chart.data.labels = Object.keys(processedData);
   chart.data.datasets[0].data = Object.values(processedData);
+  chart.data.datasets[0].backgroundColor = Object.keys(processedData).map(randomRGB);
   chart.update();
 }
 
