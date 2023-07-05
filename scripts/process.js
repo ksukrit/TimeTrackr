@@ -1,6 +1,7 @@
 class Processor {
     processData(data, cutoffTime) {
         var processedData = {};
+        data = data || {};
         for (const [ts, val] of Object.entries(data)) {
             if (ts > cutoffTime) {
                 for (let [hostname, timeSpent] of Object.entries(val)) {
